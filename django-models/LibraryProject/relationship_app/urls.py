@@ -1,10 +1,10 @@
 from django.urls import path
-from LibraryProject.relationship_app import views  # Updated import
+from .views import list_books, LibraryDetailView, library_list  # CHANGE THIS LINE
 
 app_name = 'relationship_app'
 
 urlpatterns = [
-    path('books/', views.list_books, name='list_books'),
-    path('library/<int:pk>/', views.LibraryDetailView.as_view(), name='library_detail'),
-    path('libraries/', views.library_list, name='library_list'),  # Added this line
+    path('books/', list_books, name='list_books'),  # Changed from views.list_books
+    path('library/<int:pk>/', LibraryDetailView.as_view(), name='library_detail'),  # Changed from views.LibraryDetailView
+    path('libraries/', library_list, name='library_list'),  # Changed from views.library_list
 ]
