@@ -3,14 +3,19 @@ from django.views.generic.detail import DetailView
 from django.http import HttpResponse
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
-from django.contrib.auth.decorators import user_passes_test, permission_required
+from django.contrib.auth.decorators import user_passes_test, permission_required  # CORRECTED IMPORT
 from .models import Book, Library, UserProfile, Author
-from .forms import BookForm 
+from .forms import BookForm
 
 # Function-based view to list all books
 def list_books(request):
     books = Book.objects.all()
-    return render(request, 'relationship_app/list_books.html', {'books': books})
+    return render(request, 'relationship_app/list_books.html', {
+        'books': books,
+        'can_add': request.user.has_perm('relationship_app.can_add_book'),
+        'can_change': request.user.has_perm('relationship_app.can_change_book'),
+        'can_delete': request.user.has_perm('relationship_app.can_delete_book'),
+    })
 
 # Class-based view to display library details
 class LibraryDetailView(DetailView):
@@ -27,12 +32,16 @@ def library_list(request):
     response += "</ul>"
     return HttpResponse(response)
 
-# Registration view - CORRECTED FUNCTION NAME
+# Registration view
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Set default role to Member
+            user_profile = UserProfile.objects.get(user=user)
+            user_profile.role = 'Member'
+            user_profile.save()
             login(request, user)
             return redirect('relationship_app:list_books')
     else:
@@ -62,23 +71,7 @@ def librarian_view(request):
 def member_view(request):
     return render(request, 'relationship_app/member_view.html')
 
-# Update registration to set default role
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            # Set default role to Member
-            user_profile = UserProfile.objects.get(user=user)
-            user_profile.role = 'Member'
-            user_profile.save()
-            login(request, user)
-            return redirect('relationship_app:list_books')
-    else:
-        form = UserCreationForm()
-    return render(request, 'relationship_app/register.html', {'form': form})
-
-# Custom permission views
+# Permission-based views
 @permission_required('relationship_app.can_add_book')
 def add_book(request):
     if request.method == 'POST':
@@ -109,13 +102,3 @@ def delete_book(request, pk):
         book.delete()
         return redirect('relationship_app:list_books')
     return render(request, 'relationship_app/book_confirm_delete.html', {'book': book})
-
-# Update list_books to show actions based on permissions
-def list_books(request):
-    books = Book.objects.all()
-    return render(request, 'relationship_app/list_books.html', {
-        'books': books,
-        'can_add': request.user.has_perm('relationship_app.can_add_book'),
-        'can_change': request.user.has_perm('relationship_app.can_change_book'),
-        'can_delete': request.user.has_perm('relationship_app.can_delete_book'),
-    })
