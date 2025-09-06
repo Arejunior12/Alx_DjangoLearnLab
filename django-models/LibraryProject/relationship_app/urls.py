@@ -1,18 +1,17 @@
 from django.urls import path
 from django.contrib.auth.views import LoginView, LogoutView
-from .views import list_books, LibraryDetailView, library_list
-
+from . import views
 
 app_name = 'relationship_app'
 
 urlpatterns = [
-    # Existing URLs
-    path('books/', list_books, name='list_books'),
-    path('library/<int:pk>/', LibraryDetailView.as_view(), name='library_detail'),
-    path('libraries/', library_list, name='library_list'),
+    # Book and Library URLs
+    path('books/', views.list_books, name='list_books'),
+    path('library/<int:pk>/', views.LibraryDetailView.as_view(), name='library_detail'),
+    path('libraries/', views.library_list, name='library_list'),
     
-    # Authentication URLs - USING DJANGO'S BUILT-IN VIEWS
-    
+    # Authentication URLs - EXACT FORMAT REQUIRED
+    path('register/', views.register, name='register'),
     path('login/', LoginView.as_view(template_name='relationship_app/login.html'), name='login'),
     path('logout/', LogoutView.as_view(template_name='relationship_app/logout.html'), name='logout'),
 ]

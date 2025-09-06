@@ -1,11 +1,9 @@
 from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
 from django.http import HttpResponse
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
-from .models import Library
-from .models import Book
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+from .models import Book, Library
 
 # Function-based view to list all books
 def list_books(request):
@@ -27,7 +25,7 @@ def library_list(request):
     response += "</ul>"
     return HttpResponse(response)
 
-# Authentication views
+# Registration view - CORRECTED FUNCTION NAME
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -38,9 +36,3 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
-
-
-# Optional: Protect a view with login requirement
-@login_required
-def protected_view(request):
-    return HttpResponse("This is a protected page!")
