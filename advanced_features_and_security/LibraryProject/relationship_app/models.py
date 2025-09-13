@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 class Author(models.Model):
     name = models.CharField(max_length=100)
@@ -47,11 +48,11 @@ class UserProfile(models.Model):
         ('Member', 'Member'),
     ]
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Updated
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Member')
     
     def __str__(self):
-        return f"{self.user.username} - {self.role}"
+        return f"{self.user.email} - {self.role}"
     
 class CustomUserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
