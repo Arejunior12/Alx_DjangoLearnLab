@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.contenttypes.models import ContentType
 
 class CustomUserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
@@ -158,10 +159,22 @@ class ShelfBook(models.Model):
         return f"{self.book.title} on {self.bookshelf.name}"
 
 class Book(models.Model):
+    """Example model with custom permissions."""
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=100)
-    publication_year = models.IntegerField()
-    
+    is_published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        permissions = [
+            # ADD THESE CUSTOM PERMISSIONS
+            ("can_view_book", "Can view book"),
+            ("can_create_book", "Can create book"),
+            ("can_edit_book", "Can edit book"),
+            ("can_delete_book", "Can delete book"),
+        ]
+
     def __str__(self):
         return self.title
     

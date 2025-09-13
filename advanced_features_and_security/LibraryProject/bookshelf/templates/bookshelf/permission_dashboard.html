@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Permission Dashboard</title>
+</head>
+<body>
+    <h1>Permission Dashboard for {{ user.email }}</h1>
+    
+    <h2>Groups:</h2>
+    <ul>
+        {% for group in groups %}
+        <li>{{ group.name }}</li>
+        {% empty %}
+        <li>No groups assigned</li>
+        {% endfor %}
+    </ul>
+    
+    <h2>Permissions:</h2>
+    <ul>
+        {% for permission in permissions %}
+        <li>{{ permission }}</li>
+        {% empty %}
+        <li>No permissions</li>
+        {% endfor %}
+    </ul>
+    
+    <a href="{% url 'bookshelf:book_list' %}">Back to Books</a>
+</body>
+</html>

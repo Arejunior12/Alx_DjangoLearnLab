@@ -16,8 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('relationship/', include('LibraryProject.relationship_app.urls')),  # Updated this line
+    path('relationship/', include('LibraryProject.relationship_app.urls')),
+    path('bookshelf/', include('LibraryProject.bookshelf.urls')),  # ADD THIS LINE
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
