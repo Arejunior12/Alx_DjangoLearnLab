@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Form Submitted Successfully</title>
+</head>
+<body>
+    <h1>Thank You, {{ name }}!</h1>
+    <p>Your form has been submitted successfully to {{ email }}.</p>
+    <p>All input was validated and sanitized for security.</p>
+    
+    <a href="{% url 'bookshelf:example_form' %}">Submit another form</a>
+    <br>
+    <a href="{% url 'bookshelf:book_list' %}">Back to Books</a>
+</body>
+</html>

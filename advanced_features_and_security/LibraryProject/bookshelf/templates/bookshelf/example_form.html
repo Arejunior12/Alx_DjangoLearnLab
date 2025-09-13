@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Example Form - Security Demo</title>
+    <style>
+        .error { color: red; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Example Secure Form</h1>
+    <p>This form demonstrates security best practices including CSRF protection, input validation, and XSS prevention.</p>
+    
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_name">Name:</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="error">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_email">Email:</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div class="error">{{ form.email.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_message">Message:</label>
+            {{ form.message }}
+            {% if form.message.errors %}
+                <div class="error">{{ form.message.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_age">Age (optional):</label>
+            {{ form.age }}
+            {% if form.age.errors %}
+                <div class="error">{{ form.age.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_website">Website (optional):</label>
+            {{ form.website }}
+            {% if form.website.errors %}
+                <div class="error">{{ form.website.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label>
+                {{ form.agree_to_terms }} I agree to the terms and conditions
+            </label>
+            {% if form.agree_to_terms.errors %}
+                <div class="error">{{ form.agree_to_terms.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <button type="submit">Submit</button>
+    </form>
+    
+    <a href="{% url 'bookshelf:book_list' %}">Back to Books</a>
+</body>
+</html>

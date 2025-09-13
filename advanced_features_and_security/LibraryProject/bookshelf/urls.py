@@ -9,4 +9,8 @@ urlpatterns = [
     path('books/<int:pk>/edit/', views.book_edit, name='book_edit'),
     path('books/<int:pk>/delete/', views.book_delete, name='book_delete'),
     path('permission-dashboard/', views.permission_dashboard, name='permission_dashboard'),
+    
+    # ADD THESE NEW PATHS
+    path('example-form/', views.example_form_view, name='example_form'),
+    path('secure-search/', views.secure_search, name='secure_search'),
 ]
