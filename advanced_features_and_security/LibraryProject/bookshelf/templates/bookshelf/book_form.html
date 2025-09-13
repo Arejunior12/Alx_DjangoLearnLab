@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ action }} Book</title>
+</head>
+<body>
+    <h1>{{ action }} Book</h1>
+    <form method="post">
+        {% csrf_token %}  <!-- CSRF TOKEN ADDED -->
+        
+        <div>
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" value="{{ book.title|default:'' }}" required
+                   maxlength="200" pattern="[A-Za-z0-9\s\.\,\-\']+" 
+                   title="Only letters, numbers, spaces, and basic punctuation allowed">
+        </div>
+        
+        <div>
+            <label for="author">Author:</label>
+            <input type="text" id="author" name="author" value="{{ book.author|default:'' }}" required
+                   maxlength="100" pattern="[A-Za-z\s\.\-]+" 
+                   title="Only letters, spaces, dots, and hyphens allowed">
+        </div>
+        
+        <button type="submit">Save</button>
+        <a href="{% url 'bookshelf:book_list' %}">Cancel</a>
+    </form>
+</body>
+</html>
