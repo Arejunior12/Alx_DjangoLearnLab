@@ -5,6 +5,8 @@ from django.db.models import Q
 from django.core.exceptions import ValidationError
 import re
 from .models import Book
+from .forms import ExampleForm
+from .forms import SecureSearchForm  # CORRECTED IMPORT
 
 def sanitize_input(input_string):
     """Sanitize user input to prevent XSS and SQL injection"""
@@ -124,3 +126,53 @@ def book_search_api(request):
     ).values('id', 'title', 'author')[:10]  # Limit results
     
     return JsonResponse({'results': list(books)})
+
+# ADD THESE NEW VIEWS THAT USE THE EXAMPLEFORM
+@login_required
+def example_form_view(request):
+    """
+    Example view demonstrating secure form handling
+    with CSRF protection, input validation, and XSS prevention
+    """
+    if request.method == 'POST':
+        form = ExampleForm(request.POST)
+        if form.is_valid():
+            # Process secure, validated data
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            message = form.cleaned_data['message']
+            
+            # In a real application, you would save to database or send email
+            # For demonstration, we'll just show a success message
+            
+            return render(request, 'bookshelf/example_form_success.html', {
+                'name': name,
+                'email': email,
+            })
+    else:
+        form = ExampleForm()
+    
+    return render(request, 'bookshelf/example_form.html', {'form': form})
+
+@permission_required('bookshelf.can_view_book', raise_exception=True)
+def secure_search(request):
+    """
+    Secure search view using form validation
+    """
+    form = SecureSearchForm(request.GET or None)
+    books = Book.objects.all()
+    
+    if form.is_valid():
+        query = form.cleaned_data.get('query')
+        if query:
+            # Use parameterized ORM query (safe from SQL injection)
+            books = books.filter(
+                Q(title__icontains=query) | 
+                Q(author__icontains=query)
+            )
+    
+    return render(request, 'bookshelf/secure_search.html', {
+        'form': form,
+        'books': books,
+        'query': form.cleaned_data.get('query', '') if form.is_valid() else ''
+    })
