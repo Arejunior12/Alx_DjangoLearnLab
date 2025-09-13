@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Library App{% endblock %}</title>
+</head>
+<body>
+    <nav>
+        {% if user.is_authenticated %}
+            <span>Welcome, {{ user.username }} ({{ user.userprofile.role }})!</span>
+            {% if user.userprofile.role == 'Admin' %}
+                <a href="{% url 'relationship_app:admin_view' %}">Admin Dashboard</a>
+            {% elif user.userprofile.role == 'Librarian' %}
+                <a href="{% url 'relationship_app:librarian_view' %}">Librarian Dashboard</a>
+            {% elif user.userprofile.role == 'Member' %}
+                <a href="{% url 'relationship_app:member_view' %}">Member Dashboard</a>
+            {% endif %}
+            <a href="{% url 'relationship_app:logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'relationship_app:login' %}">Login</a>
+            <a href="{% url 'relationship_app:register' %}">Register</a>
+        {% endif %}
+        <a href="{% url 'relationship_app:list_books' %}">Books</a>
+        <a href="{% url 'relationship_app:library_list' %}">Libraries</a>
+    </nav>
+    
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

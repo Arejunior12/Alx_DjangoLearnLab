@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>List of Books</title>
+</head>
+
+<body>
+    {% extends 'relationship_app/base.html' %}
+
+    {% block title %}List of Books{% endblock %}
+
+    {% block content %}
+    <h1>Books Available:</h1>
+
+    {% if can_add %}
+    <a href="{% url 'relationship_app:add_book' %}">Add New Book</a>
+    {% endif %}
+
+    <ul>
+        {% for book in books %}
+        <li>
+            {{ book.title }} by {{ book.author.name }}
+            {% if can_change %}
+            <a href="{% url 'relationship_app:edit_book' book.pk %}">Edit</a>
+            {% endif %}
+            {% if can_delete %}
+            <a href="{% url 'relationship_app:delete_book' book.pk %}">Delete</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endblock %}
+</body>
+
+</html>
