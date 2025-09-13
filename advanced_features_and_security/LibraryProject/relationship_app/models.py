@@ -6,6 +6,29 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
+class ShelfBook(models.Model):
+    """Model representing a book on a specific bookshelf."""
+    
+    bookshelf = models.ForeignKey(
+        BookShelf,
+        on_delete=models.CASCADE,
+        related_name='shelf_books'
+    )
+    book = models.ForeignKey(
+        'LibraryProject.relationship_app.Book',  # Update this line
+        on_delete=models.CASCADE,
+        related_name='shelf_entries'
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-added_at']
+        unique_together = ['bookshelf', 'book']
+    
+    def __str__(self):
+        return f"{self.book.title} on {self.bookshelf.name}"
+
 class Author(models.Model):
     name = models.CharField(max_length=100)
     
@@ -48,7 +71,7 @@ class UserProfile(models.Model):
         ('Member', 'Member'),
     ]
     
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Updated
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Member')
     
     def __str__(self):

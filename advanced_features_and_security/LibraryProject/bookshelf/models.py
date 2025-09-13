@@ -99,7 +99,7 @@ class ShelfBook(models.Model):
         related_name='shelf_books'
     )
     book = models.ForeignKey(
-        'relationship_app.Book',
+        'LibraryProject.relationship_app.Book',  # Update this line
         on_delete=models.CASCADE,
         related_name='shelf_entries'
     )
