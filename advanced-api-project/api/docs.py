@@ -1,51 +1,47 @@
 """
 API Documentation for Advanced Book API
 
-View Configurations and Custom Behavior:
+CORRECTED View Configurations and Custom Behavior:
 
-1. BookListView (GET /api/books/)
-   - Purpose: Retrieve paginated list of all books
-   - Features: Search, filtering, ordering
-   - Permissions: AllowAny (public read access)
-   - Custom Hooks: Custom filter class for advanced filtering
+Django REST Framework Generic View Classes Used:
 
-2. BookCreateView (POST /api/books/create/)
-   - Purpose: Create new book instances
-   - Features: Custom validation, audit logging
-   - Permissions: IsAuthenticated + IsAdminOrReadOnly
-   - Custom Hooks: perform_create for business logic
+1. ListAPIView - For listing multiple objects
+   - BookListView (GET /api/books/)
+   - AuthorListView (GET /api/authors/)
 
-3. BookUpdateView (PUT/PATCH /api/books/<id>/update/)
-   - Purpose: Update existing book instances
-   - Features: Partial update support, audit trail
-   - Permissions: IsAuthenticated + IsAdminOrReadOnly
-   - Custom Hooks: perform_update for change tracking
+2. RetrieveAPIView - For retrieving single objects  
+   - BookDetailView (GET /api/books/<id>/)
+   - AuthorDetailView (GET /api/authors/<id>/)
 
-URL Patterns:
-- List views use plural endpoints (/books/, /authors/)
-- Detail views use singular with PK (/books/1/)
-- Action-specific endpoints for clarity (/books/create/, /books/1/update/)
+3. CreateAPIView - For creating new objects
+   - BookCreateView (POST /api/books/create/)
+   - AuthorCreateView (POST /api/authors/create/)
 
-Custom Settings:
-- Django Filter Backend: Enables field-based filtering
-- SearchFilter: Provides search across multiple fields
-- OrderingFilter: Allows result sorting by specified fields
-- Custom Permission Classes: Role-based access control
+4. UpdateAPIView - For updating existing objects
+   - BookUpdateView (PUT/PATCH /api/books/<id>/update/)
+   - AuthorUpdateView (PUT/PATCH /api/authors/<id>/update/)
+
+5. DestroyAPIView - For deleting objects
+   - BookDeleteView (DELETE /api/books/<id>/delete/)
+   - AuthorDeleteView (DELETE /api/authors/<id>/delete/)
+
+6. RetrieveUpdateDestroyAPIView - Combined operations
+   - BookRetrieveUpdateDeleteView (GET/PUT/PATCH/DELETE /api/books/<id>/manage/)
+   - AuthorRetrieveUpdateDeleteView (GET/PUT/PATCH/DELETE /api/authors/<id>/manage/)
+
+Key Differences from Incorrect Naming:
+- ListAPIView (NOT ListView)
+- RetrieveAPIView (NOT DetailView) 
+- CreateAPIView (NOT CreateView)
+- UpdateAPIView (NOT UpdateView)
+- DestroyAPIView (NOT DeleteView)
+- RetrieveUpdateDestroyAPIView (Combined view)
+
+URL Patterns Structure:
+- List views: /api/books/ (GET)
+- Create views: /api/books/create/ (POST) 
+- Detail/Retrieve views: /api/books/<id>/ (GET)
+- Update views: /api/books/<id>/update/ (PUT/PATCH)
+- Delete views: /api/books/<id>/delete/ (DELETE)
+- Combined views: /api/books/<id>/manage/ (GET/PUT/PATCH/DELETE)
 """
-
-API_ENDPOINTS = {
-    'books': {
-        'list': '/api/books/',
-        'create': '/api/books/create/',
-        'detail': '/api/books/{id}/',
-        'update': '/api/books/{id}/update/',
-        'delete': '/api/books/{id}/delete/',
-    },
-    'authors': {
-        'list': '/api/authors/',
-        'create': '/api/authors/create/',
-        'detail': '/api/authors/{id}/',
-        'update': '/api/authors/{id}/update/',
-        'delete': '/api/authors/{id}/delete/',
-    }
-}
