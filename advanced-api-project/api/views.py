@@ -4,32 +4,63 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer
 
-# Combined Book View that handles GET, PUT, PATCH, DELETE on same endpoint
-class BookRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+# Book Views - Using only correct DRF generic view classes
+class BookListCreateView(generics.ListCreateAPIView):
     """
-    RetrieveUpdateDestroyAPIView: Handles GET, PUT, PATCH, DELETE for books.
+    ListCreateAPIView for listing all books or creating a new book.
+    Handles GET (list) and POST (create) operations.
+    """
+    queryset = Book.objects.all().select_related('author')
+    serializer_class = BookSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['author', 'publication_year']
+    search_fields = ['title', 'author__name']
+    ordering_fields = ['title', 'publication_year', 'author__name']
+    ordering = ['title']
     
-    This single view handles all operations on a specific book instance:
-    - GET: Retrieve book details
-    - PUT: Full update of book
-    - PATCH: Partial update of book  
-    - DELETE: Remove book
+    def get_permissions(self):
+        """Allow anyone to view, but only authenticated users to create"""
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+    
+    def list(self, request, *args, **kwargs):
+        """Custom list response"""
+        response = super().list(request, *args, **kwargs)
+        return Response({
+            'status': 'success',
+            'count': len(response.data),
+            'data': response.data
+        })
+    
+    def create(self, request, *args, **kwargs):
+        """Custom create response"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response({
+            'status': 'success',
+            'message': 'Book created successfully',
+            'data': serializer.data
+        }, status=status.HTTP_201_CREATED, headers=headers)
+
+class BookRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    RetrieveUpdateDestroyAPIView for retrieve, update, and delete operations.
+    Handles GET (retrieve), PUT/PATCH (update), and DELETE (delete) operations.
     """
     queryset = Book.objects.all().select_related('author')
     serializer_class = BookSerializer
     
     def get_permissions(self):
-        """
-        Dynamic permissions based on HTTP method.
-        - Read operations (GET): Allow anyone
-        - Write operations (PUT, PATCH, DELETE): Require authentication
-        """
-        if self.request.method in permissions.SAFE_METHODS:
+        """Allow anyone to view, but only authenticated users to modify"""
+        if self.request.method == 'GET':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
     
     def retrieve(self, request, *args, **kwargs):
-        """Custom retrieve method with enhanced response"""
+        """Custom retrieve response"""
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response({
@@ -38,7 +69,7 @@ class BookRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         })
     
     def update(self, request, *args, **kwargs):
-        """Custom update method with enhanced response"""
+        """Custom update response"""
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -52,7 +83,7 @@ class BookRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         })
     
     def destroy(self, request, *args, **kwargs):
-        """Custom delete method with confirmation response"""
+        """Custom delete response"""
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({
@@ -60,55 +91,54 @@ class BookRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
             'message': 'Book deleted successfully'
         }, status=status.HTTP_204_NO_CONTENT)
 
-# Combined Author View that handles GET, PUT, PATCH, DELETE on same endpoint
-class AuthorRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+# Author Views - Using only correct DRF generic view classes
+class AuthorListCreateView(generics.ListCreateAPIView):
     """
-    RetrieveUpdateDestroyAPIView: Handles GET, PUT, PATCH, DELETE for authors.
+    ListCreateAPIView for listing all authors or creating a new author.
+    Handles GET (list) and POST (create) operations.
+    """
+    queryset = Author.objects.all().prefetch_related('books')
+    serializer_class = AuthorSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name']
+    ordering = ['name']
+    
+    def get_permissions(self):
+        """Allow anyone to view, but only authenticated users to create"""
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+    
+    def list(self, request, *args, **kwargs):
+        """Custom list response"""
+        response = super().list(request, *args, **kwargs)
+        return Response({
+            'status': 'success',
+            'count': len(response.data),
+            'data': response.data
+        })
+
+class AuthorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    RetrieveUpdateDestroyAPIView for retrieve, update, and delete operations.
+    Handles GET (retrieve), PUT/PATCH (update), and DELETE (delete) operations.
     """
     queryset = Author.objects.all().prefetch_related('books')
     serializer_class = AuthorSerializer
     
     def get_permissions(self):
-        """Dynamic permissions based on HTTP method"""
-        if self.request.method in permissions.SAFE_METHODS:
+        """Allow anyone to view, but only authenticated users to modify"""
+        if self.request.method == 'GET':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
     
     def destroy(self, request, *args, **kwargs):
-        """Custom delete with books cascade handling"""
+        """Custom delete response with book count"""
         instance = self.get_object()
         book_count = instance.books.count()
         self.perform_destroy(instance)
         return Response({
             'status': 'success',
-            'message': f'Author and {book_count} associated books deleted successfully'
+            'message': f'Author and {book_count} associated book(s) deleted successfully'
         }, status=status.HTTP_204_NO_CONTENT)
-
-# Keep the individual views for List and Create operations
-class BookListView(generics.ListAPIView):
-    """ListAPIView: Handles GET for all books"""
-    queryset = Book.objects.all().select_related('author')
-    serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['author', 'publication_year']
-    search_fields = ['title', 'author__name']
-    ordering_fields = ['title', 'publication_year', 'author__name']
-
-class BookCreateView(generics.CreateAPIView):
-    """CreateAPIView: Handles POST for new books"""
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-class AuthorListView(generics.ListAPIView):
-    """ListAPIView: Handles GET for all authors"""
-    queryset = Author.objects.all().prefetch_related('books')
-    serializer_class = AuthorSerializer
-    permission_classes = [permissions.AllowAny]
-
-class AuthorCreateView(generics.CreateAPIView):
-    """CreateAPIView: Handles POST for new authors"""
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
-    permission_classes = [permissions.IsAuthenticated]
