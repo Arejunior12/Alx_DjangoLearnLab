@@ -1,180 +1,86 @@
-from rest_framework import generics, permissions, filters, status
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from .models import Author, Book
-from .serializers import AuthorSerializer, BookSerializer
+from rest_framework import generics, permissions
+from .models import Book
+from .serializers import BookSerializer
 
-
-class BookListAPIView(generics.ListAPIView):
+# Generic Views for CRUD operations
+class BookListView(generics.ListAPIView):
     """
-    ListAPIView for retrieving all books.
-    Handles GET requests to list book resources.
+    ListView for retrieving all books.
+    AllowAny permission - anyone can view the book list.
     """
-    queryset = Book.objects.all().select_related('author')
+    queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['author', 'publication_year']
-    search_fields = ['title', 'author__name']
-    ordering_fields = ['title', 'publication_year', 'author__name']
-    ordering = ['title']
 
-
-class BookCreateAPIView(generics.CreateAPIView):
+class BookDetailView(generics.RetrieveAPIView):
     """
-    CreateAPIView for creating new books.
-    Handles POST requests to create book resources.
+    DetailView for retrieving a single book by ID.
+    AllowAny permission - anyone can view book details.
+    """
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.AllowAny]
+
+class BookCreateView(generics.CreateAPIView):
+    """
+    CreateView for adding a new book.
+    IsAuthenticated permission - only logged-in users can create books.
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
-class BookRetrieveAPIView(generics.RetrieveAPIView):
+class BookUpdateView(generics.UpdateAPIView):
     """
-    RetrieveAPIView for retrieving single books.
-    Handles GET requests for individual book resources.
-    """
-    queryset = Book.objects.all().select_related('author')
-    serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class BookUpdateAPIView(generics.UpdateAPIView):
-    """
-    UpdateAPIView for updating existing books.
-    Handles PUT and PATCH requests to update book resources.
+    UpdateView for modifying an existing book.
+    IsAuthenticated permission - only logged-in users can update books.
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
-class BookDestroyAPIView(generics.DestroyAPIView):
+class BookDeleteView(generics.DestroyAPIView):
     """
-    DestroyAPIView for deleting books.
-    Handles DELETE requests to remove book resources.
+    DeleteView for removing a book.
+    IsAuthenticated permission - only logged-in users can delete books.
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
-# Combined views for more efficient endpoints
-class BookListCreateAPIView(generics.ListCreateAPIView):
+# Combined View for all CRUD operations (alternative approach)
+class BookListCreateView(generics.ListCreateAPIView):
     """
-    ListCreateAPIView for listing and creating books.
-    Combines ListAPIView and CreateAPIView functionality.
+    Combined view that handles both listing and creating books.
+    Different permissions for different HTTP methods.
     """
-    queryset = Book.objects.all().select_related('author')
-    serializer_class = BookSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['author', 'publication_year']
-    search_fields = ['title', 'author__name']
-    ordering_fields = ['title', 'publication_year', 'author__name']
-    
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
-
-
-class BookRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    RetrieveUpdateDestroyAPIView for retrieve, update, delete operations.
-    Combines RetrieveAPIView, UpdateAPIView, and DestroyAPIView functionality.
-    """
-    queryset = Book.objects.all().select_related('author')
+    queryset = Book.objects.all()
     serializer_class = BookSerializer
     
     def get_permissions(self):
+        """
+        Custom permission handling:
+        - GET: AllowAny (anyone can view)
+        - POST: IsAuthenticated (only authenticated users can create)
+        """
         if self.request.method == 'GET':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
-
-# Author Views
-class AuthorListAPIView(generics.ListAPIView):
+class BookRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     """
-    ListAPIView for retrieving all authors.
-    Handles GET requests to list author resources.
+    Combined view that handles retrieve, update, and destroy operations.
+    Different permissions for different HTTP methods.
     """
-    queryset = Author.objects.all().prefetch_related('books')
-    serializer_class = AuthorSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name']
-    ordering_fields = ['name']
-    ordering = ['name']
-
-
-class AuthorCreateAPIView(generics.CreateAPIView):
-    """
-    CreateAPIView for creating new authors.
-    Handles POST requests to create author resources.
-    """
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class AuthorRetrieveAPIView(generics.RetrieveAPIView):
-    """
-    RetrieveAPIView for retrieving single authors.
-    Handles GET requests for individual author resources.
-    """
-    queryset = Author.objects.all().prefetch_related('books')
-    serializer_class = AuthorSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class AuthorUpdateAPIView(generics.UpdateAPIView):
-    """
-    UpdateAPIView for updating existing authors.
-    Handles PUT and PATCH requests to update author resources.
-    """
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class AuthorDestroyAPIView(generics.DestroyAPIView):
-    """
-    DestroyAPIView for deleting authors.
-    Handles DELETE requests to remove author resources.
-    """
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-# Combined Author Views
-class AuthorListCreateAPIView(generics.ListCreateAPIView):
-    """
-    ListCreateAPIView for listing and creating authors.
-    Combines ListAPIView and CreateAPIView functionality.
-    """
-    queryset = Author.objects.all().prefetch_related('books')
-    serializer_class = AuthorSerializer
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name']
-    ordering_fields = ['name']
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
     
     def get_permissions(self):
-        if self.request.method == 'GET':
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
-
-
-class AuthorRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    RetrieveUpdateDestroyAPIView for retrieve, update, delete operations.
-    Combines RetrieveAPIView, UpdateAPIView, and DestroyAPIView functionality.
-    """
-    queryset = Author.objects.all().prefetch_related('books')
-    serializer_class = AuthorSerializer
-    
-    def get_permissions(self):
+        """
+        Custom permission handling:
+        - GET: AllowAny (anyone can view)
+        - PUT/PATCH/DELETE: IsAuthenticated (only authenticated users can modify)
+        """
         if self.request.method == 'GET':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
