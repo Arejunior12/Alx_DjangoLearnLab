@@ -12,8 +12,8 @@ urlpatterns = [
     # EXACT endpoints required by checker (without pk)
     path('books/', BookListView.as_view(), name='book-list'),
     path('books/create/', BookCreateView.as_view(), name='book-create'),
-    path('books/update/', update_book, name='book-update'),  # Exact match - no pk
-    path('books/delete/', delete_book, name='book-delete'),  # Exact match - no pk
+    path('books/update/', update_book, name='book-update'),
+    path('books/delete/', delete_book, name='book-delete'),
     
     # Standard REST endpoints (for actual functionality)
     path('books/<int:pk>/', BookDetailView.as_view(), name='book-detail'),
