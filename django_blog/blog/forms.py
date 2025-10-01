@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Post, Comment
-from taggit.forms import TagWidget
+# Remove the TagWidget import and use TagField directly
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -32,7 +32,8 @@ class PostForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
-            'tags': TagWidget(attrs={'class': 'form-control'}),
+            # Remove TagWidget and use a regular TextInput for tags
+            'tags': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter tags separated by commas'}),
         }
         help_texts = {
             'tags': 'Enter tags separated by commas',
