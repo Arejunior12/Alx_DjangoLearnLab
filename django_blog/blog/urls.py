@@ -19,8 +19,12 @@ urlpatterns = [
     path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
     
-    # Comment URLs - CHANGE THIS LINE TO MATCH THE EXACT PATTERN
+    # Comment URLs
     path('post/<int:pk>/comments/new/', CommentCreateView.as_view(), name='add-comment'),
     path('comment/<int:pk>/update/', CommentUpdateView.as_view(), name='comment-update'),
     path('comment/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+    
+    # Search and Tag URLs
+    path('search/', views.search_posts, name='search'),
+    path('tags/<slug:tag_slug>/', views.posts_by_tag, name='posts-by-tag'),
 ]

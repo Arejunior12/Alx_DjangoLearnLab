@@ -5,8 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
+from django.db.models import Q
+from taggit.models import Tag
 from .models import Post, Comment
-from .forms import UserRegisterForm, UserUpdateForm, CommentForm
+from .forms import UserRegisterForm, UserUpdateForm, CommentForm, PostForm
 
 def index(request):
     return render(request, 'blog/index.html')
@@ -36,12 +38,42 @@ def profile(request):
     
     return render(request, 'blog/profile.html', {'form': form})
 
+# Search Functionality
+def search_posts(request):
+    query = request.GET.get('q')
+    posts = Post.objects.all()
+    
+    if query:
+        posts = posts.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(tags__name__icontains=query)
+        ).distinct()
+    
+    context = {
+        'posts': posts,
+        'query': query,
+    }
+    return render(request, 'blog/search_results.html', context)
+
+# Tag Functionality
+def posts_by_tag(request, tag_slug):
+    tag = get_object_or_404(Tag, slug=tag_slug)
+    posts = Post.objects.filter(tags__in=[tag])
+    
+    context = {
+        'tag': tag,
+        'posts': posts,
+    }
+    return render(request, 'blog/posts_by_tag.html', context)
+
 # Post Views
 class PostListView(ListView):
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
     ordering = ['-published_date']
+    paginate_by = 5
 
 class PostDetailView(DetailView):
     model = Post
@@ -54,8 +86,8 @@ class PostDetailView(DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
+    form_class = PostForm
     template_name = 'blog/post_form.html'
-    fields = ['title', 'content']
     
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -63,8 +95,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
+    form_class = PostForm
     template_name = 'blog/post_form.html'
-    fields = ['title', 'content']
     
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -83,7 +115,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         post = self.get_object()
         return self.request.user == post.author
 
-# Comment Views - REPLACE THE FUNCTION WITH THIS CLASS
+# Comment Views
 class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
     form_class = CommentForm

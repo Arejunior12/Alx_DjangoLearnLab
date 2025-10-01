@@ -294,3 +294,60 @@ nav a:hover {
     margin: 15px 0;
     border-left: 4px solid #dc3545;
 }
+/* Search Bar Styles */
+.search-bar {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.search-bar form {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.search-bar input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 300px;
+}
+
+.search-bar button {
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-bar button:hover {
+    background: #0056b3;
+}
+
+/* Tag Styles */
+.post-tags {
+    margin: 10px 0;
+}
+
+.tag {
+    display: inline-block;
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 8px;
+    margin: 2px;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.tag:hover {
+    background: #007bff;
+    color: white;
+}
+
+/* Search Results */
+.search-results, .tag-results {
+    margin: 20px 0;
+}

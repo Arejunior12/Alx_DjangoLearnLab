@@ -14,6 +14,16 @@
     <p class="post-meta">
         By {{ post.author }} on {{ post.published_date|date:"F d, Y" }}
     </p>
+    
+    <!-- Tags in post list -->
+    {% if post.tags.all %}
+    <div class="post-tags">
+        {% for tag in post.tags.all %}
+            <a href="{% url 'posts-by-tag' tag.slug %}" class="tag">{{ tag.name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
     <p>{{ post.content|truncatewords:30 }}</p>
     <a href="{% url 'post-detail' post.pk %}" class="read-more">Read more</a>
 </article>
