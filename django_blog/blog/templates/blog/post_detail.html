@@ -12,10 +12,52 @@
     
     {% if user == post.author %}
     <div class="post-actions">
-        <a href="{% url 'post-update' post.pk %}" class="btn btn-edit">Edit</a>
-        <a href="{% url 'post-delete' post.pk %}" class="btn btn-delete">Delete</a>
+        <a href="{% url 'post-update' post.pk %}" class="btn btn-edit">Edit Post</a>
+        <a href="{% url 'post-delete' post.pk %}" class="btn btn-delete">Delete Post</a>
     </div>
     {% endif %}
+    
+    <!-- Comments Section -->
+    <section class="comments-section">
+        <h3>Comments ({{ post.comments.count }})</h3>
+        
+        <!-- Comment Form -->
+        {% if user.is_authenticated %}
+        <div class="comment-form">
+            <h4>Add a Comment</h4>
+            <form method="POST" action="{% url 'add-comment' post.pk %}">
+                {% csrf_token %}
+                {{ comment_form.as_p }}
+                <button type="submit" class="btn btn-primary">Submit Comment</button>
+            </form>
+        </div>
+        {% else %}
+        <p><a href="{% url 'login' %}">Log in</a> to leave a comment.</p>
+        {% endif %}
+        
+        <!-- Comments List -->
+        <div class="comments-list">
+            {% for comment in post.comments.all %}
+            <div class="comment">
+                <div class="comment-header">
+                    <strong>{{ comment.author }}</strong>
+                    <span class="comment-date">{{ comment.created_at|date:"F d, Y H:i" }}</span>
+                </div>
+                <div class="comment-content">
+                    {{ comment.content|linebreaks }}
+                </div>
+                {% if user == comment.author %}
+                <div class="comment-actions">
+                    <a href="{% url 'comment-update' comment.pk %}" class="btn btn-edit-small">Edit</a>
+                    <a href="{% url 'comment-delete' comment.pk %}" class="btn btn-delete-small">Delete</a>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p>No comments yet. Be the first to comment!</p>
+            {% endfor %}
+        </div>
+    </section>
     
     <a href="{% url 'post-list' %}" class="btn btn-back">Back to Posts</a>
 </article>
