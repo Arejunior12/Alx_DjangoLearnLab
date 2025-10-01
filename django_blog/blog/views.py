@@ -9,6 +9,7 @@ from django.db.models import Q
 from taggit.models import Tag
 from .models import Post, Comment
 from .forms import UserRegisterForm, UserUpdateForm, CommentForm, PostForm
+from django.views.generic import ListView
 
 def index(request):
     return render(request, 'blog/index.html')
@@ -57,15 +58,20 @@ def search_posts(request):
     return render(request, 'blog/search_results.html', context)
 
 # Tag Functionality
-def posts_by_tag(request, tag_slug):
-    tag = get_object_or_404(Tag, slug=tag_slug)
-    posts = Post.objects.filter(tags__in=[tag])
+class PostByTagListView(ListView):
+    model = Post
+    template_name = 'blog/posts_by_tag.html'
+    context_object_name = 'posts'
     
-    context = {
-        'tag': tag,
-        'posts': posts,
-    }
-    return render(request, 'blog/posts_by_tag.html', context)
+    def get_queryset(self):
+        tag_slug = self.kwargs.get('tag_slug')
+        self.tag = get_object_or_404(Tag, slug=tag_slug)
+        return Post.objects.filter(tags__in=[self.tag])
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tag'] = self.tag
+        return context
 
 # Post Views
 class PostListView(ListView):
