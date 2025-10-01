@@ -31,10 +31,6 @@ class PostForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
-            'tags': forms.TextInput(attrs={'class': 'form-control'}),
-        }
-        help_texts = {
-            'tags': 'Enter tags separated by commas',
         }
 
 class CommentForm(forms.ModelForm):
