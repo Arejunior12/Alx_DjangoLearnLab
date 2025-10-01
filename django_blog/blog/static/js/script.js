@@ -1,5 +1,4 @@
-console.log('Django Blog loaded successfully!');
-
+// Basic example script to demonstrate dynamic behavior
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Document ready');
+    console.log('Blog page loaded');
 });

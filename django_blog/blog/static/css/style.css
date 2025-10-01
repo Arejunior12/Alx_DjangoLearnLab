@@ -1,34 +1,45 @@
-body {
-    font-family: Arial, sans-serif;
+/* Basic reset */
+* {
     margin: 0;
     padding: 0;
-    background-color: #ac5252;
+    box-sizing: border-box;
 }
 
-.container {
-    width: 80%;
-    margin: 0 auto;
-    background: white;
-    padding: 20px;
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
 }
 
 header {
-    background: #333;
-    color: rgb(56, 81, 163);
-    padding: 20px 0;
+    background-color: #333;
+    padding: 10px;
     text-align: center;
 }
 
-nav a {
+header nav ul {
+    list-style-type: none;
+}
+
+header nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+header nav ul li a {
     color: white;
     text-decoration: none;
-    margin: 0 15px;
+    font-size: 18px;
+}
+
+.content {
+    margin: 20px;
 }
 
 footer {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 50px;
     padding: 10px;
-    background: #333;
-    color: rgb(88, 139, 29);
+    background-color: #333;
+    color: white;
 }
