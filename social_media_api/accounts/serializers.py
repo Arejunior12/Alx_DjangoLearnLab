@@ -68,3 +68,20 @@ class FollowSerializer(serializers.Serializer):
         except CustomUser.DoesNotExist:
             raise serializers.ValidationError("User does not exist.")
         return value
+
+class UserDiscoverySerializer(serializers.ModelSerializer):
+    """Simplified serializer for user discovery/list views"""
+    followers_count = serializers.ReadOnlyField()
+    following_count = serializers.ReadOnlyField()
+    is_following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'bio', 'profile_picture', 
+                 'followers_count', 'following_count', 'is_following')
+
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user.is_following(obj)
+        return False

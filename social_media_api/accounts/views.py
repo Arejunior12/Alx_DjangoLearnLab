@@ -1,4 +1,4 @@
-from rest_framework import status, permissions
+from rest_framework import status, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -102,24 +102,49 @@ class UnfollowUserView(APIView):
                 'error': f'You are not following {target_user.username}'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-class UserFollowingListView(APIView):
+class UserFollowingListView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserProfileSerializer
 
     def get(self, request):
         following_users = request.user.following.all()
-        serializer = UserProfileSerializer(following_users, many=True, context={'request': request})
+        serializer = self.get_serializer(following_users, many=True, context={'request': request})
         return Response({
             'count': following_users.count(),
             'following': serializer.data
         })
 
-class UserFollowersListView(APIView):
+class UserFollowersListView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserProfileSerializer
 
     def get(self, request):
         followers = request.user.followers.all()
-        serializer = UserProfileSerializer(followers, many=True, context={'request': request})
+        serializer = self.get_serializer(followers, many=True, context={'request': request})
         return Response({
             'count': followers.count(),
             'followers': serializer.data
         })
+
+class UserListView(generics.GenericAPIView):
+    """View for listing all users (for discovery)"""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserProfileSerializer
+
+    def get(self, request):
+        users = CustomUser.objects.all().exclude(id=request.user.id)
+        serializer = self.get_serializer(users, many=True, context={'request': request})
+        return Response({
+            'count': users.count(),
+            'users': serializer.data
+        })
+
+class UserDetailView(generics.GenericAPIView):
+    """View for getting specific user details"""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserProfileSerializer
+
+    def get(self, request, user_id):
+        user = get_object_or_404(CustomUser, id=user_id)
+        serializer = self.get_serializer(user, context={'request': request})
+        return Response(serializer.data)

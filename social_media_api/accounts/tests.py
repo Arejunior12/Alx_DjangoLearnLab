@@ -42,6 +42,33 @@ class FollowTests(APITestCase):
         self.assertFalse(self.user1.is_following(self.user2))
         self.assertEqual(response.data['following'], False)
 
+class UserListViewTests(APITestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(
+            username='user1',
+            email='user1@example.com',
+            password='testpass123'
+        )
+        self.user2 = User.objects.create_user(
+            username='user2',
+            email='user2@example.com',
+            password='testpass123'
+        )
+        self.client.force_authenticate(user=self.user1)
+    
+    def test_user_list_view(self):
+        url = '/api/auth/users/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)  # Should exclude current user
+        self.assertEqual(response.data['users'][0]['username'], 'user2')
+    
+    def test_user_detail_view(self):
+        url = f'/api/auth/users/{self.user2.id}/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], 'user2')
+
 class FeedTests(APITestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(
