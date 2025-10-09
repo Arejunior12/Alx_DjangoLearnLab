@@ -23,7 +23,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password2')
         user = get_user_model().objects.create_user(**validated_data)
-        # Create token for the new user
         Token.objects.create(user=user)
         return user
 
@@ -46,9 +45,26 @@ class UserLoginSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     followers_count = serializers.ReadOnlyField()
     following_count = serializers.ReadOnlyField()
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'email', 'bio', 'profile_picture', 
-                 'followers_count', 'following_count', 'created_at')
+                 'followers_count', 'following_count', 'is_following', 'created_at')
         read_only_fields = ('id', 'created_at')
+
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user.is_following(obj)
+        return False
+
+class FollowSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+
+    def validate_user_id(self, value):
+        try:
+            user = CustomUser.objects.get(id=value)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError("User does not exist.")
+        return value

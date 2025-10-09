@@ -1,20 +1,16 @@
-# Social Media API - Posts & Comments
+# Social Media API - Follow & Feed Features
 
-## Posts Endpoints
+## Follow Management Endpoints
 
-### List Posts
-**GET** `/api/posts/`
-- Returns paginated list of posts
-- **Query Parameters:**
-  - `search`: Search in title and content
-  - `author`: Filter by author ID
-  - `ordering`: Order by fields (created_at, updated_at)
+### Follow a User
+**POST** `/api/auth/follow/{user_id}/`
+- Follow another user
 - **Headers:** `Authorization: Token <your_token>`
-
-### Create Post
-**POST** `/api/posts/`
+- **Response:**
 ```json
 {
-    "title": "Post Title",
-    "content": "Post content here"
+    "message": "You are now following username",
+    "following": true,
+    "followers_count": 5,
+    "following_count": 3
 }
