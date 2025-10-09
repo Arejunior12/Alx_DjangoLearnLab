@@ -5,9 +5,18 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import Q
-from .models import Post, Comment
-from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer, CommentCreateSerializer
+from django.shortcuts import get_object_or_404
+from .models import Post, Comment, Like
+from .serializers import (PostSerializer, PostCreateSerializer, CommentSerializer, 
+                         CommentCreateSerializer, LikeSerializer)
 from .permissions import IsAuthorOrReadOnly
+
+# Import notifications only if the app is installed
+try:
+    from notifications.models import Notification
+    NOTIFICATIONS_ENABLED = True
+except ImportError:
+    NOTIFICATIONS_ENABLED = False
 
 class PostViewSet(viewsets.ModelViewSet):
     """
@@ -41,12 +50,73 @@ class PostViewSet(viewsets.ModelViewSet):
         )
         
         if comment:
+            # Create notification for post author if notifications are enabled
+            if NOTIFICATIONS_ENABLED and post.author != request.user:
+                Notification.create_notification(
+                    recipient=post.author,
+                    actor=request.user,
+                    verb='comment',
+                    target=post
+                )
+            
             serializer = CommentSerializer(comment, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(
             {'error': 'Could not create comment'}, 
             status=status.HTTP_400_BAD_REQUEST
         )
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def like(self, request, pk=None):
+        post = self.get_object()
+        user = request.user
+        
+        # Check if user already liked the post
+        if Like.objects.filter(post=post, user=user).exists():
+            return Response(
+                {'error': 'You have already liked this post.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create like
+        like = Like.objects.create(post=post, user=user)
+        
+        # Create notification for post author if notifications are enabled
+        if NOTIFICATIONS_ENABLED and post.author != user:
+            Notification.create_notification(
+                recipient=post.author,
+                actor=user,
+                verb='like',
+                target=post
+            )
+        
+        serializer = LikeSerializer(like, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def unlike(self, request, pk=None):
+        post = self.get_object()
+        user = request.user
+        
+        try:
+            like = Like.objects.get(post=post, user=user)
+            like.delete()
+            return Response(
+                {'message': 'Post unliked successfully.'},
+                status=status.HTTP_200_OK
+            )
+        except Like.DoesNotExist:
+            return Response(
+                {'error': 'You have not liked this post.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def likes(self, request, pk=None):
+        post = self.get_object()
+        likes = post.likes.all()
+        serializer = LikeSerializer(likes, many=True, context={'request': request})
+        return Response(serializer.data)
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
@@ -69,6 +139,19 @@ class CommentViewSet(viewsets.ModelViewSet):
         if post_id:
             queryset = queryset.filter(post_id=post_id)
         return queryset
+
+class LikeViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for viewing likes.
+    """
+    queryset = Like.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = LikeSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['post', 'user']
+    
+    def get_queryset(self):
+        return Like.objects.filter(user=self.request.user)
 
 class FeedView(APIView):
     """
@@ -97,7 +180,7 @@ class FeedView(APIView):
         if not hasattr(self, '_paginator'):
             from rest_framework.pagination import PageNumberPagination
             self._paginator = PageNumberPagination()
-            self._paginator.page_size = 10  # Set your page size
+            self._paginator.page_size = 10
         return self._paginator
 
     def paginate_queryset(self, queryset):

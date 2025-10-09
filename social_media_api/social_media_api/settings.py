@@ -33,15 +33,15 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
-    'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.contenttypes',  # For GenericForeignKey
     'rest_framework',
     'rest_framework.authtoken',
     'accounts',
     'posts',
-    'django_filters',
+    'notifications',  # Add the new notifications app
 ]
 
 MIDDLEWARE = [

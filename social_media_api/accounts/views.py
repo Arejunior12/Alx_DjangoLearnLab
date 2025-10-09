@@ -8,6 +8,13 @@ from .models import CustomUser
 from .serializers import (UserRegistrationSerializer, UserLoginSerializer, 
                          UserProfileSerializer, FollowSerializer)
 
+# Import notifications only if the app is installed
+try:
+    from notifications.models import Notification
+    NOTIFICATIONS_ENABLED = True
+except ImportError:
+    NOTIFICATIONS_ENABLED = False
+
 class UserRegistrationView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -73,6 +80,14 @@ class FollowUserView(APIView):
             )
         
         if request.user.follow(target_user):
+            # Create notification for the followed user
+            if NOTIFICATIONS_ENABLED:
+                Notification.create_notification(
+                    recipient=target_user,
+                    actor=request.user,
+                    verb='follow'
+                )
+            
             return Response({
                 'message': f'You are now following {target_user.username}',
                 'following': True,
