@@ -57,14 +57,9 @@ class Notification(models.Model):
         self.read = True
         self.save()
     
-    @classmethod
-    def create_notification(cls, recipient, actor, verb, target=None):
-        """Helper method to create notifications"""
-        notification = cls(
-            recipient=recipient,
-            actor=actor,
-            verb=verb,
-            target=target
-        )
-        notification.save()
-        return notification
+    def save(self, *args, **kwargs):
+        """Override save to handle target object automatically"""
+        if self.target and not self.target_content_type_id:
+            self.target_content_type = ContentType.objects.get_for_model(self.target)
+            self.target_object_id = self.target.id
+        super().save(*args, **kwargs)

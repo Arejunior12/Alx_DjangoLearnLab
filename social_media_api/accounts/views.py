@@ -80,9 +80,9 @@ class FollowUserView(APIView):
             )
         
         if request.user.follow(target_user):
-            # Create notification for the followed user
+            # Create notification for the followed user using direct creation
             if NOTIFICATIONS_ENABLED:
-                Notification.create_notification(
+                Notification.objects.create(
                     recipient=target_user,
                     actor=request.user,
                     verb='follow'
