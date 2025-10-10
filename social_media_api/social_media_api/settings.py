@@ -8,13 +8,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Determine the environment
 ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'development')
 
-# Database configuration - ADD THIS SECTION
+# Database configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Static files configuration - ADD THIS SECTION
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# Media files configuration
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # If in production, override with PostgreSQL settings
 if ENVIRONMENT == 'production':
@@ -33,6 +44,9 @@ if ENVIRONMENT == 'production':
             'PORT': os.environ.get('DB_PORT', '5432'),
         }
     }
+    
+    # Production static files configuration
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     
     # Security settings
     SECURE_BROWSER_XSS_FILTER = True
