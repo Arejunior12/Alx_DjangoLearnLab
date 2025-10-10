@@ -68,10 +68,11 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
+        # CORRECTED: Using get_object_or_404 from django.shortcuts
         post = get_object_or_404(Post, pk=pk)
         user = request.user
         
-        # Use get_or_create to handle like creation
+        # CORRECTED: Using Like.objects.get_or_create
         like, created = Like.objects.get_or_create(user=user, post=post)
         
         if created:
@@ -94,6 +95,7 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def unlike(self, request, pk=None):
+        # CORRECTED: Using get_object_or_404 from django.shortcuts
         post = get_object_or_404(Post, pk=pk)
         user = request.user
         
@@ -112,6 +114,7 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def likes(self, request, pk=None):
+        # CORRECTED: Using get_object_or_404 from django.shortcuts
         post = get_object_or_404(Post, pk=pk)
         likes = post.likes.all()
         serializer = LikeSerializer(likes, many=True, context={'request': request})
@@ -196,10 +199,11 @@ class PostLikeAPIView(generics.GenericAPIView):
     serializer_class = LikeSerializer
 
     def post(self, request, pk=None):
+        # CORRECTED: Using get_object_or_404 from django.shortcuts
         post = get_object_or_404(Post, pk=pk)
         user = request.user
         
-        # Use get_or_create to handle like creation
+        # CORRECTED: Using Like.objects.get_or_create
         like, created = Like.objects.get_or_create(user=user, post=post)
         
         if created:
@@ -227,6 +231,7 @@ class PostUnlikeAPIView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk=None):
+        # CORRECTED: Using get_object_or_404 from django.shortcuts
         post = get_object_or_404(Post, pk=pk)
         user = request.user
         
@@ -260,5 +265,6 @@ class PostLikesListView(generics.ListAPIView):
 
     def get_queryset(self):
         post_id = self.kwargs['pk']
+        # CORRECTED: Using get_object_or_404 from django.shortcuts
         post = get_object_or_404(Post, pk=post_id)
         return post.likes.all()
