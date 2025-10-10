@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -7,10 +8,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Determine the environment
 ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'development')
 
+# Database configuration - ADD THIS SECTION
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# If in production, override with PostgreSQL settings
 if ENVIRONMENT == 'production':
     # Production settings
     DEBUG = False
     ALLOWED_HOSTS = ['your-domain.com', 'www.your-domain.com', 'localhost', '127.0.0.1']
+    
+    # Production database configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'social_media_db'),
+            'USER': os.environ.get('DB_USER', 'social_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
     
     # Security settings
     SECURE_BROWSER_XSS_FILTER = True
