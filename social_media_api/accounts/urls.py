@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (UserRegistrationView, UserLoginView, UserProfileView,
                    FollowUserView, UnfollowUserView, UserFollowingListView,
-                   UserFollowersListView, UserListView, UserDetailView)
+                   UserFollowersListView, UserListView, UserDetailView, health_check)
 
 urlpatterns = [
     path('register/', UserRegistrationView.as_view(), name='register'),
@@ -13,4 +13,5 @@ urlpatterns = [
     path('followers/', UserFollowersListView.as_view(), name='followers-list'),
     path('users/', UserListView.as_view(), name='user-list'),  # New endpoint
     path('users/<int:user_id>/', UserDetailView.as_view(), name='user-detail'),  # New endpoint
+    path('health/', health_check, name='health-check'),
 ]

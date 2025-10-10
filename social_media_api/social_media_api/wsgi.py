@@ -8,9 +8,12 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 
 import os
-
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'social_media_api.settings')
 
 application = get_wsgi_application()
+
+# Add WhiteNoise for static files
+from whitenoise import WhiteNoise
+application = WhiteNoise(application)

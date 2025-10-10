@@ -7,6 +7,33 @@ from django.shortcuts import get_object_or_404
 from .models import CustomUser
 from .serializers import (UserRegistrationSerializer, UserLoginSerializer, 
                          UserProfileSerializer, FollowSerializer)
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from django.db import connection
+from django.utils import timezone
+import os
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """Health check endpoint for monitoring"""
+    try:
+        # Check database connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        
+        return Response({
+            'status': 'healthy',
+            'database': 'connected',
+            'environment': os.environ.get('DJANGO_ENVIRONMENT', 'development'),
+            'timestamp': timezone.now().isoformat()
+        })
+    except Exception as e:
+        return Response({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': timezone.now().isoformat()
+        }, status=500)
 
 # Import notifications only if the app is installed
 try:
