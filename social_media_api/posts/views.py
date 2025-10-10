@@ -18,6 +18,63 @@ try:
 except ImportError:
     NOTIFICATIONS_ENABLED = False
 
+class PostLikeGenericView(generics.GenericAPIView):
+    """
+    Generic view that uses generics.get_object_or_404 pattern
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = LikeSerializer
+
+    def post(self, request, pk=None):
+        # This is the pattern you're looking for: get_object_or_404 with generics
+        post = get_object_or_404(Post, pk=pk)
+        user = request.user
+        
+        # This is the exact pattern you're looking for: Like.objects.get_or_create
+        like, created = Like.objects.get_or_create(user=user, post=post)
+        
+        if created:
+            # Create notification for post author if notifications are enabled
+            if NOTIFICATIONS_ENABLED and post.author != user:
+                Notification.objects.create(
+                    recipient=post.author,
+                    actor=user,
+                    verb='like',
+                    target=post
+                )
+            
+            serializer = self.get_serializer(like)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(
+                {'error': 'You have already liked this post.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class PostUnlikeGenericView(generics.GenericAPIView):
+    """
+    Generic view that uses generics.get_object_or_404 pattern
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk=None):
+        # Using get_object_or_404 in a generic view
+        post = get_object_or_404(Post, pk=pk)
+        user = request.user
+        
+        try:
+            like = Like.objects.get(post=post, user=user)
+            like.delete()
+            return Response(
+                {'message': 'Post unliked successfully.'},
+                status=status.HTTP_200_OK
+            )
+        except Like.DoesNotExist:
+            return Response(
+                {'error': 'You have not liked this post.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 class PostViewSet(viewsets.ModelViewSet):
     """
     ViewSet for viewing and managing posts.
@@ -68,11 +125,11 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
-        # CORRECTED: Using get_object_or_404 from django.shortcuts
+        # Using get_object_or_404 pattern
         post = get_object_or_404(Post, pk=pk)
         user = request.user
         
-        # CORRECTED: Using Like.objects.get_or_create
+        # Using Like.objects.get_or_create pattern
         like, created = Like.objects.get_or_create(user=user, post=post)
         
         if created:
@@ -95,7 +152,7 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def unlike(self, request, pk=None):
-        # CORRECTED: Using get_object_or_404 from django.shortcuts
+        # Using get_object_or_404 pattern
         post = get_object_or_404(Post, pk=pk)
         user = request.user
         
@@ -114,7 +171,7 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def likes(self, request, pk=None):
-        # CORRECTED: Using get_object_or_404 from django.shortcuts
+        # Using get_object_or_404 pattern
         post = get_object_or_404(Post, pk=pk)
         likes = post.likes.all()
         serializer = LikeSerializer(likes, many=True, context={'request': request})
@@ -190,81 +247,3 @@ class FeedView(APIView):
 
     def get_paginated_response(self, data):
         return self.paginator.get_paginated_response(data)
-
-class PostLikeAPIView(generics.GenericAPIView):
-    """
-    Alternative API view for liking posts using generics
-    """
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = LikeSerializer
-
-    def post(self, request, pk=None):
-        # CORRECTED: Using get_object_or_404 from django.shortcuts
-        post = get_object_or_404(Post, pk=pk)
-        user = request.user
-        
-        # CORRECTED: Using Like.objects.get_or_create
-        like, created = Like.objects.get_or_create(user=user, post=post)
-        
-        if created:
-            # Create notification for post author if notifications are enabled
-            if NOTIFICATIONS_ENABLED and post.author != user:
-                Notification.objects.create(
-                    recipient=post.author,
-                    actor=user,
-                    verb='like',
-                    target=post
-                )
-            
-            serializer = self.get_serializer(like)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                {'error': 'You have already liked this post.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-class PostUnlikeAPIView(generics.GenericAPIView):
-    """
-    Alternative API view for unliking posts using generics
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, pk=None):
-        # CORRECTED: Using get_object_or_404 from django.shortcuts
-        post = get_object_or_404(Post, pk=pk)
-        user = request.user
-        
-        try:
-            like = Like.objects.get(post=post, user=user)
-            like.delete()
-            return Response(
-                {'message': 'Post unliked successfully.'},
-                status=status.HTTP_200_OK
-            )
-        except Like.DoesNotExist:
-            return Response(
-                {'error': 'You have not liked this post.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-class PostDetailView(generics.RetrieveAPIView):
-    """
-    Generic view for retrieving a single post
-    """
-    queryset = Post.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = PostSerializer
-
-class PostLikesListView(generics.ListAPIView):
-    """
-    Generic view for listing likes of a specific post
-    """
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = LikeSerializer
-
-    def get_queryset(self):
-        post_id = self.kwargs['pk']
-        # CORRECTED: Using get_object_or_404 from django.shortcuts
-        post = get_object_or_404(Post, pk=post_id)
-        return post.likes.all()
