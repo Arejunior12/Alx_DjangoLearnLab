@@ -242,3 +242,23 @@ class PostUnlikeAPIView(generics.GenericAPIView):
                 {'error': 'You have not liked this post.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class PostDetailView(generics.RetrieveAPIView):
+    """
+    Generic view for retrieving a single post
+    """
+    queryset = Post.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PostSerializer
+
+class PostLikesListView(generics.ListAPIView):
+    """
+    Generic view for listing likes of a specific post
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = LikeSerializer
+
+    def get_queryset(self):
+        post_id = self.kwargs['pk']
+        post = get_object_or_404(Post, pk=post_id)
+        return post.likes.all()
