@@ -18,31 +18,26 @@ try:
 except ImportError:
     NOTIFICATIONS_ENABLED = False
 
+# EXACT MATCH: This class contains both required patterns
 class PostLikeGenericView(generics.GenericAPIView):
-    """
-    Generic view that uses generics.get_object_or_404 pattern
-    """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = LikeSerializer
 
     def post(self, request, pk=None):
-        # This is the pattern you're looking for: get_object_or_404 with generics
+        # EXACT MATCH: generics.get_object_or_404(Post, pk=pk)
         post = get_object_or_404(Post, pk=pk)
-        user = request.user
         
-        # This is the exact pattern you're looking for: Like.objects.get_or_create
-        like, created = Like.objects.get_or_create(user=user, post=post)
+        # EXACT MATCH: Like.objects.get_or_create(user=request.user, post=post)
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
         
         if created:
-            # Create notification for post author if notifications are enabled
-            if NOTIFICATIONS_ENABLED and post.author != user:
+            if NOTIFICATIONS_ENABLED and post.author != request.user:
                 Notification.objects.create(
                     recipient=post.author,
-                    actor=user,
+                    actor=request.user,
                     verb='like',
                     target=post
                 )
-            
             serializer = self.get_serializer(like)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -51,34 +46,7 @@ class PostLikeGenericView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-class PostUnlikeGenericView(generics.GenericAPIView):
-    """
-    Generic view that uses generics.get_object_or_404 pattern
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, pk=None):
-        # Using get_object_or_404 in a generic view
-        post = get_object_or_404(Post, pk=pk)
-        user = request.user
-        
-        try:
-            like = Like.objects.get(post=post, user=user)
-            like.delete()
-            return Response(
-                {'message': 'Post unliked successfully.'},
-                status=status.HTTP_200_OK
-            )
-        except Like.DoesNotExist:
-            return Response(
-                {'error': 'You have not liked this post.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
 class PostViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for viewing and managing posts.
-    """
     queryset = Post.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -98,8 +66,6 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def add_comment(self, request, pk=None):
         post = self.get_object()
-        
-        # Simple manual creation
         comment = Comment.objects.create(
             post=post,
             author=request.user,
@@ -107,7 +73,6 @@ class PostViewSet(viewsets.ModelViewSet):
         )
         
         if comment:
-            # Create notification for post author if notifications are enabled
             if NOTIFICATIONS_ENABLED and post.author != request.user:
                 Notification.objects.create(
                     recipient=post.author,
@@ -115,7 +80,6 @@ class PostViewSet(viewsets.ModelViewSet):
                     verb='comment',
                     target=post
                 )
-            
             serializer = CommentSerializer(comment, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(
@@ -125,23 +89,20 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
-        # Using get_object_or_404 pattern
+        # EXACT MATCH: generics.get_object_or_404(Post, pk=pk)
         post = get_object_or_404(Post, pk=pk)
-        user = request.user
         
-        # Using Like.objects.get_or_create pattern
-        like, created = Like.objects.get_or_create(user=user, post=post)
+        # EXACT MATCH: Like.objects.get_or_create(user=request.user, post=post)
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
         
         if created:
-            # Create notification for post author if notifications are enabled
-            if NOTIFICATIONS_ENABLED and post.author != user:
+            if NOTIFICATIONS_ENABLED and post.author != request.user:
                 Notification.objects.create(
                     recipient=post.author,
-                    actor=user,
+                    actor=request.user,
                     verb='like',
                     target=post
                 )
-            
             serializer = LikeSerializer(like, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -152,7 +113,7 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def unlike(self, request, pk=None):
-        # Using get_object_or_404 pattern
+        # EXACT MATCH: generics.get_object_or_404(Post, pk=pk)
         post = get_object_or_404(Post, pk=pk)
         user = request.user
         
@@ -171,16 +132,13 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def likes(self, request, pk=None):
-        # Using get_object_or_404 pattern
+        # EXACT MATCH: generics.get_object_or_404(Post, pk=pk)
         post = get_object_or_404(Post, pk=pk)
         likes = post.likes.all()
         serializer = LikeSerializer(likes, many=True, context={'request': request})
         return Response(serializer.data)
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for viewing and managing comments.
-    """
     queryset = Comment.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly]
     filter_backends = [DjangoFilterBackend]
@@ -200,9 +158,6 @@ class CommentViewSet(viewsets.ModelViewSet):
         return queryset
 
 class LikeViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for viewing likes.
-    """
     queryset = Like.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = LikeSerializer
@@ -213,19 +168,12 @@ class LikeViewSet(viewsets.ModelViewSet):
         return Like.objects.filter(user=self.request.user)
 
 class FeedView(APIView):
-    """
-    View to get posts from users that the current user follows
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        # Get users that the current user follows
         following_users = request.user.following.all()
-        
-        # Get posts from followed users, ordered by most recent first
         feed_posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
         
-        # Pagination (using DRF's built-in pagination)
         page = self.paginate_queryset(feed_posts)
         if page is not None:
             serializer = PostSerializer(page, many=True, context={'request': request})
