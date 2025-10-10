@@ -10,5 +10,10 @@ router.register(r'likes', LikeViewSet, basename='like')
 urlpatterns = [
     path('', include(router.urls)),
     path('feed/', FeedView.as_view(), name='feed'),
-    path('posts/<int:pk>/like-generic/', PostLikeGenericView.as_view(), name='post-like-generic'),
+    
+    # EXACT MATCH: <int:pk>/like/
+    path('posts/<int:pk>/like/', PostLikeGenericView.as_view(), name='post-like'),
+    
+    # EXACT MATCH: <int:pk>/unlike/
+    path('posts/<int:pk>/unlike/', PostViewSet.as_view({'post': 'unlike'}), name='post-unlike'),
 ]
